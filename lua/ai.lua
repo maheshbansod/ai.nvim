@@ -101,7 +101,7 @@ M.get_ai_suggestion = function()
   ---@diagnostic disable-next-line: unused-local
   local row, col = unpack(vim.api.nvim_win_get_cursor(0))
   local total_lines = 100
-  local start_row = row - total_lines / 2
+  local start_row = math.max(row - total_lines / 2, 0)
   local end_row = row + total_lines / 2
 
   local surrounding_lines = vim.api.nvim_buf_get_lines(0, start_row, end_row, false)
