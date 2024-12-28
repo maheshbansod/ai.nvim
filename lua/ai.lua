@@ -116,7 +116,11 @@ M.get_ai_suggestion = function()
     local replaced_code_lines = vim.split(replaced_code, '\n')
     if #replaced_code_lines > 0 then
       if replaced_code_lines[1]:find("```") ~= nil then
-        table.remove(replaced_code_lines, #replaced_code_lines)
+        -- remove the last line that starts with ```
+        while replaced_code_lines[#replaced_code_lines]:find("```") ~= nil do
+          table.remove(replaced_code_lines, #replaced_code_lines)
+        end
+        -- remove the first line
         table.remove(replaced_code_lines, 1)
       end
       vim.api.nvim_buf_set_lines(editor_buf, start_row, end_row, false, replaced_code_lines)
