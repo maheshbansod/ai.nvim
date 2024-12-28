@@ -4,30 +4,55 @@
 ---
 
 
+---@class ai.Config
+---@field api_key string|nil
+---@field api_key_getter nil|fun():string
+
+---@type ai.Config
+local plugin_config = {}
+
 local M = {}
 
-M.setup = function()
-  -- nothing to do here
+---@param config ai.Config
+local setup = function(config)
+  plugin_config = config
 end
+
+M.setup = setup
 
 local create_prompt_window = function()
   -- i need to create a floating window
   local buf = vim.api.nvim_create_buf(false, true)
-  local float_height = 1
-  local float_actual_height = float_height + 2
-  local config = {
-    relative = "cursor",
-    row = -float_actual_height,
-    col = 0,
-    -- row = row,
-    -- col = col,
-    width = vim.o.columns,
-    height = float_height,
-    border = "rounded"
-  }
-  local win = vim.api.nvim_open_win(buf, true, config)
+  local inner_lines = 3
+  local get_config = function()
+    local float_actual_height = inner_lines + 2
+    return {
+      relative = "cursor",
+      row = -float_actual_height,
+      col = 0,
+      -- row = row,
+      -- col = col,
+      width = vim.o.columns,
+      height = inner_lines,
+      border = "rounded",
+      title = "Enter a prompt",
+      footer = "<Enter> to run"
+    }
+  end
+  local win = vim.api.nvim_open_win(buf, true, get_config())
   vim.cmd [[startinsert]]
   return { buf = buf, win = win }
+end
+
+local get_api_key = function()
+  local api_key = plugin_config.api_key
+  if api_key then
+    return api_key
+  else
+    local new_api_key = plugin_config.api_key_getter()
+    plugin_config.api_key = new_api_key
+    return new_api_key
+  end
 end
 
 ---
@@ -44,7 +69,7 @@ local generate_replacement_code = function(
   local surrounding_content = table.concat(surrounding_lines, '\n')
   -- todo: maybe add language in the prompt
 
-  local API_KEY = ""
+  local API_KEY = get_api_key()
 
   local curl = require('plenary.curl')
   local url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=" ..
@@ -109,7 +134,10 @@ M.get_ai_suggestion = function()
   local editor_buf = vim.api.nvim_get_current_buf()
 
   local prompt_float = create_prompt_window()
-  vim.keymap.set("n", "<CR>", function()
+  local set_keymap = function(mode, keys, cb)
+    vim.keymap.set(mode, keys, cb, { buffer = prompt_float.buf })
+  end
+  set_keymap("n", "<CR>", function()
     -- take the current contents of the buffer
     local prompt = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n')
     local replaced_code = generate_replacement_code(prompt, surrounding_lines, current_line)
@@ -126,9 +154,7 @@ M.get_ai_suggestion = function()
       vim.api.nvim_buf_set_lines(editor_buf, start_row, end_row, false, replaced_code_lines)
       vim.api.nvim_win_close(prompt_float.win, true)
     end
-  end, { buffer = prompt_float.buf })
-
-  vim.print(surrounding_lines)
+  end)
 end
 -- create_prompt_window()
 
