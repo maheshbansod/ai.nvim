@@ -123,14 +123,27 @@ local generate_replacement_code = function(
 end
 
 M.get_ai_suggestion = function()
-  ---@diagnostic disable-next-line: unused-local
-  local row, col = unpack(vim.api.nvim_win_get_cursor(0))
-  local total_lines = 100
-  local start_row = math.max(row - total_lines / 2, 0)
-  local end_row = row + total_lines / 2
+  -- get the selection
+  local vstart = vim.fn.getpos("'<")
+  local vend = vim.fn.getpos("'>")
+  local start_row = vstart[2]
+  local end_row = vend[2]
+  local selected_lines = vim.fn.getline(start_row, end_row)
+  if type(selected_lines) == "string" then
+    selected_lines = { selected_lines }
+  end
 
-  local surrounding_lines = vim.api.nvim_buf_get_lines(0, start_row, end_row, false)
+  -- if selection isn't available then get surrounding
+  if start_row == end_row and start_row == 0 and end_row == 0 then
+    local row, _ = unpack(vim.api.nvim_win_get_cursor(0))
+    local total_lines = 100
+    start_row = math.max(row - total_lines / 2, 0)
+    end_row = row + total_lines / 2
+    selected_lines = vim.api.nvim_buf_get_lines(0, start_row, end_row, false)
+  end
+
   local current_line = vim.api.nvim_get_current_line()
+
   local editor_buf = vim.api.nvim_get_current_buf()
 
   local prompt_float = create_prompt_window()
@@ -140,14 +153,22 @@ M.get_ai_suggestion = function()
   set_keymap("n", "<CR>", function()
     -- take the current contents of the buffer
     local prompt = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n')
-    local replaced_code = generate_replacement_code(prompt, surrounding_lines, current_line)
+    local replaced_code = generate_replacement_code(prompt, selected_lines, current_line)
     local replaced_code_lines = vim.split(replaced_code, '\n')
     if #replaced_code_lines > 0 then
       if replaced_code_lines[1]:find("```") ~= nil then
         -- remove the last line that starts with ```
-        while replaced_code_lines[#replaced_code_lines]:find("```") ~= nil do
-          table.remove(replaced_code_lines, #replaced_code_lines)
+        local last_line_index = #replaced_code_lines
+        while last_line_index > 0 do
+          if replaced_code_lines[last_line_index]:find("```") then
+            table.remove(replaced_code_lines, last_line_index)
+            break
+          else
+            table.remove(replaced_code_lines, last_line_index)
+          end
+          last_line_index = last_line_index - 1
         end
+
         -- remove the first line
         table.remove(replaced_code_lines, 1)
       end
@@ -156,7 +177,6 @@ M.get_ai_suggestion = function()
     end
   end)
 end
--- create_prompt_window()
 
 
 return M
