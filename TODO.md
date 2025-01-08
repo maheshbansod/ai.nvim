@@ -1,7 +1,7 @@
 
 # TODO
 
-- [ ] Get API key from setup or env
+- [x] Get API key from setup or env
     - i think i need the env option or some way so that i don't need to commit it in any repo
 - [ ] Set shortcut key in plugin config
 - [ ] See if there's automatic doc generator
