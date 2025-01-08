@@ -9,7 +9,28 @@ Currently supports gemini.
 
 ### Installation
 
-TODO: installation instructions for different plugin managers and maybe add keymap too
+Using [lazy.nvim](https://github.com/folke/lazy.nvim)
+
+```lua
+-- plugins/ai.lua
+return {
+    'maheshbansod/ai.nvim',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    config = function()
+      require('ai').setup({
+        -- It needs an API key to access the Gemini API
+        api_key_getter = function()
+          -- get it from a file
+          local path = vim.fn.stdpath('data') .. "/secrets/google_ai_api_key"
+          local lines = vim.fn.readfile(path)
+          return lines[1]
+        end
+      })
+      -- You can set a keymap
+      vim.keymap.set({ 'n', 'v' }, '<M-k>', require 'ai'.get_ai_suggestion)
+    end
+  }
+```
 
 ### Usage
 
