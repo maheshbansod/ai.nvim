@@ -22,4 +22,13 @@ M.create_prompt_window = function()
   vim.cmd [[startinsert]]
   return { buf = buf, win = win }
 end
+M.create_chat_window = function()
+  local buf = vim.api.nvim_create_buf(true, false)
+  local config = {
+    split = 'right',
+    width = 40,
+  }
+  local win = vim.api.nvim_open_win(buf, true, config)
+  return { buf = buf, win = win }
+end
 return M

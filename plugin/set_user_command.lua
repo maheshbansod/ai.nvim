@@ -1,3 +1,6 @@
 vim.api.nvim_create_user_command("AiSuggestion", function()
   require("ai").get_ai_suggestion()
 end, { range = true })
+vim.api.nvim_create_user_command("AiChat", function()
+  require("ai").start_chat()
+end, { range = true })

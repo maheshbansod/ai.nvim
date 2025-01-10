@@ -41,9 +41,9 @@ local generate_replacement_code = function(
       }
     },
     generationConfig = {
-      temperature = 1,
-      topK = 40,
-      topP = 0.95,
+      temperature = 0.7,
+      topK = 10,
+      topP = 0.3,
       maxOutputTokens = 8192,
       responseMimeType = "text/plain"
     }
