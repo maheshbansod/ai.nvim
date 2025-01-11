@@ -58,7 +58,7 @@ M.start_chat = function()
     local chat_lines = vim.api.nvim_buf_get_lines(split.buf, 0, -1, false)
     local conversation = chat_to_conversation(chat_lines)
     local llm_contents = conversation_to_llm_contents(conversation)
-    local text = au.llm_run({
+    au.llm_run({
       contents = llm_contents,
       systemInstruction = {
         role = "user",
@@ -80,17 +80,16 @@ Ensure that your code is clean and exhaustively solves the user's problem.
         maxOutputTokens = 8192,
         responseMimeType = "text/plain"
       }
-    })
-
-    -- append the output to chat directly for now - maybe i'll parse it at one point idk
-    text = "\nAI: " .. text .. "\nUser: "
-    local text_lines = vim.split(text, '\n')
-    vim.api.nvim_buf_set_lines(split.buf, -1, -1, false, text_lines)
+    }, function(responseText)
+      -- append the output to chat directly for now - maybe i'll parse it at one point idk
+      local text = "\nAI: " .. responseText .. "\nUser: "
+      local text_lines = vim.split(text, '\n')
+      vim.api.nvim_buf_set_lines(split.buf, -1, -1, false, text_lines)
+    end)
   end)
 
   -- let's put some stuff inside the window
   -- it needs to have a title (maybe)
   -- it needs to have a place for prompt - i think i can do something like zed
 end
-
 return M

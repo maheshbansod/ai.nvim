@@ -13,12 +13,14 @@
 
 #### Chat stuff
 
-- [ ] Chat window for continous chats
-    - A keymap will call LLM to add some next things in the chat.
-    - I want clear separation of AI message and user message I think.
-    - I am not 100% sure about how do I represent symbols that link to parts of code/files or something.
-        One way would be to probably use everything plaintext and display and then parse it, another would probably 
-        involve maintaining a datastructure such that it's parsed only part of it is displayed.
+- [x] Chat window for continous chats
+- [ ] Add context with @<some code symbol>.
+- [ ] RAG on the current file (if the file is big enough)
+- [ ] Allow adding current file as context.
+- [ ] Different colors for AI message and user message maybe.
+- [ ] Auto scroll down to user prompt when AI response appears probably?
+- [ ] Stream AI response + autoscroll while streaming.
+    - I want to do this in a non-invasive way
 
 
 #### Completion and AI refactoring

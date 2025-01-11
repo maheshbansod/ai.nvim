@@ -7,11 +7,11 @@ local au = require('ai-utils')
 ---@param user_prompt string
 ---@param surrounding_lines string[]
 ---@param current_line string
----@return string
 local generate_replacement_code = function(
     user_prompt,
     surrounding_lines,
-    current_line
+    current_line,
+    on_generated
 )
   -- ai gang
   local surrounding_content = table.concat(surrounding_lines, '\n')
@@ -48,13 +48,13 @@ local generate_replacement_code = function(
       responseMimeType = "text/plain"
     }
   }
-  local text = au.llm_run(post_data)
-
-  if text then
-    return text
-  else
-    return surrounding_content
-  end
+  au.llm_run(post_data, function(text)
+    if text then
+      on_generated(text)
+    else
+      on_generated(surrounding_content)
+    end
+  end)
 end
 
 M.get_ai_suggestion = function()
@@ -88,28 +88,29 @@ M.get_ai_suggestion = function()
   set_keymap("n", "<CR>", function()
     -- take the current contents of the buffer
     local prompt = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), '\n')
-    local replaced_code = generate_replacement_code(prompt, selected_lines, current_line)
-    local replaced_code_lines = vim.split(replaced_code, '\n')
-    if #replaced_code_lines > 0 then
-      if replaced_code_lines[1]:find("```") ~= nil then
-        -- remove the last line that starts with ```
-        local last_line_index = #replaced_code_lines
-        while last_line_index > 0 do
-          if replaced_code_lines[last_line_index]:find("```") then
-            table.remove(replaced_code_lines, last_line_index)
-            break
-          else
-            table.remove(replaced_code_lines, last_line_index)
+    generate_replacement_code(prompt, selected_lines, current_line, function(replaced_code)
+      local replaced_code_lines = vim.split(replaced_code, '\n')
+      if #replaced_code_lines > 0 then
+        if replaced_code_lines[1]:find("```") ~= nil then
+          -- remove the last line that starts with ```
+          local last_line_index = #replaced_code_lines
+          while last_line_index > 0 do
+            if replaced_code_lines[last_line_index]:find("```") then
+              table.remove(replaced_code_lines, last_line_index)
+              break
+            else
+              table.remove(replaced_code_lines, last_line_index)
+            end
+            last_line_index = last_line_index - 1
           end
-          last_line_index = last_line_index - 1
-        end
 
-        -- remove the first line
-        table.remove(replaced_code_lines, 1)
+          -- remove the first line
+          table.remove(replaced_code_lines, 1)
+        end
+        vim.api.nvim_buf_set_lines(editor_buf, start_row, end_row, false, replaced_code_lines)
+        vim.api.nvim_win_close(prompt_float.win, true)
       end
-      vim.api.nvim_buf_set_lines(editor_buf, start_row, end_row, false, replaced_code_lines)
-      vim.api.nvim_win_close(prompt_float.win, true)
-    end
+    end)
   end)
 end
 

@@ -19,23 +19,31 @@ local get_api_key = function()
   end
 end
 
-M.llm_run = function(post_data)
+M.llm_run = function(post_data, on_exit)
   local API_KEY = get_api_key()
 
   local curl = require('plenary.curl')
   local url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=" ..
       API_KEY
 
-  local res = curl.post(url, {
+  curl.post(url, {
     body = vim.fn.json_encode(post_data),
     headers = {
       content_type = "application/json",
     },
-  }).body
-  res = vim.fn.json_decode(res)
-  ---@type string
-  local text = res.candidates[1].content.parts[1].text
-  return text
+    callback = function(res)
+      vim.schedule(function()
+        res = vim.fn.json_decode(res.body)
+        ---@type string
+        local text = res.candidates[1].content.parts[1].text
+        on_exit(text)
+      end)
+    end
+  })
 end
+
+---TODO: think about this later
+local a = require('plenary.async')
+M.llm_run_async = a.wrap(M.llm_run, 2)
 
 return M
