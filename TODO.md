@@ -21,6 +21,9 @@
 - [ ] Auto scroll down to user prompt when AI response appears probably?
 - [ ] Stream AI response + autoscroll while streaming.
     - I want to do this in a non-invasive way
+- [ ] Apply code block
+    - without context - search in the file where to put the code first.
+    - with context it can directly select what parts of the context to replace.
 
 
 #### Completion and AI refactoring
@@ -34,3 +37,10 @@ I don't think I want auto-completion like Cursor or copilot, but I do want inten
 
 - [ ] A mode for AI to get functions related to vim too maybe - like refactoring, go to definition, etc
 - [ ] A way for AI to search documentation and then store it to use it again too.
+
+#### Code explainer
+
+Explains some code.  
+I want a mode where I can maybe select a block of code and press a keybinding (`<leader>ak` maybe) 
+and then it generates a floating window that explains the given block
+
