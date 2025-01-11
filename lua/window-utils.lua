@@ -23,7 +23,7 @@ M.create_prompt_window = function()
   return { buf = buf, win = win }
 end
 M.create_chat_window = function()
-  local buf = vim.api.nvim_create_buf(true, false)
+  local buf = vim.api.nvim_create_buf(true, true)
   local config = {
     split = 'right',
     width = 40,

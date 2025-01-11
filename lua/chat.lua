@@ -49,8 +49,20 @@ M.start_chat = function()
   -- opens a window
   -- initialises with some settings probably
 
+  local parent_buf = vim.api.nvim_get_current_buf()
   local split = wu.create_chat_window()
 
+  vim.api.nvim_create_autocmd('QuitPre', {
+    group = vim.api.nvim_create_augroup('AiChatParentBufCloseGroup', {}),
+    callback = function(event)
+      if event.buf == parent_buf then
+        if vim.api.nvim_win_is_valid(split.win) then
+          vim.api.nvim_win_close(split.win, false)
+          vim.api.nvim_del_augroup_by_id(event.group)
+        end
+      end
+    end
+  })
 
   vim.api.nvim_set_hl(0, 'UserMessageHighlight', { fg = '#0000ff' })
   vim.fn.matchadd('UserMessageHighlight', '\\(^User: \\)\\@<=\\_.\\{\\-\\}\\(\\(' ..
@@ -58,10 +70,10 @@ M.start_chat = function()
   vim.api.nvim_set_hl(0, 'UserLabelHighlight', { fg = '#0000ff', bold = true })
   vim.fn.matchadd('UserLabelHighlight', '^User: ')
 
-  vim.api.nvim_set_hl(0, 'AIMessageHighlight', { fg = '#ff0000' })
-  vim.fn.matchadd('AIMessageHighlight', '\\(^AI: \\)\\@<=\\_.\\{\\-\\}\\(\\(' .. message_separator .. '\\)\\|\\%$\\)\\@=')
-  vim.api.nvim_set_hl(0, 'AILabelHighlight', { fg = '#ff0000', bold = true })
-  vim.fn.matchadd('AILabelHighlight', '^AI: ')
+  -- vim.api.nvim_set_hl(0, 'AIMessageHighlight', { fg = '#ff0000' })
+  -- vim.fn.matchadd('AIMessageHighlight', '\\(^AI: \\)\\@<=\\_.\\{\\-\\}\\(\\(' .. message_separator .. '\\)\\|\\%$\\)\\@=')
+  -- vim.api.nvim_set_hl(0, 'AILabelHighlight', { fg = '#ff0000', bold = true })
+  -- vim.fn.matchadd('AILabelHighlight', '^AI: ')
 
   vim.api.nvim_buf_set_lines(split.buf, 0, 0, false, { "User: " })
 
