@@ -48,7 +48,7 @@ return {
 
 -> opens a split window  
 -> Add your message on a line starting with `User: `  
--> Messages go the LLM and a response is appended to the buffer.  
+-> Messages go to the LLM and a response is appended to the buffer.  
 
 ### Future
 
