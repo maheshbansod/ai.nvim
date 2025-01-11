@@ -2,6 +2,7 @@ local M = {}
 
 local wu = require 'window-utils'
 local au = require 'ai-utils'
+local message_separator = "----------"
 
 ---@alias Message {role: "user"|"ai", text: string}
 ---@alias Conversation {messages: Message[]}
@@ -18,6 +19,8 @@ local chat_to_conversation = function(lines)
     elseif line:match('^User: ') then
       local text = line:sub(3)
       table.insert(messages, { text = text, role = "user" })
+    elseif line:match('^' .. message_separator .. '$') then
+      -- ignore the line
     else
       local last_message = messages[#messages]
       last_message.text = last_message.text .. '\n' .. line
@@ -48,7 +51,20 @@ M.start_chat = function()
 
   local split = wu.create_chat_window()
 
+
+  vim.api.nvim_set_hl(0, 'UserMessageHighlight', { fg = '#0000ff' })
+  vim.fn.matchadd('UserMessageHighlight', '\\(^User: \\)\\@<=\\_.\\{\\-\\}\\(\\(' ..
+    message_separator .. '\\)\\|\\%$\\)\\@=')
+  vim.api.nvim_set_hl(0, 'UserLabelHighlight', { fg = '#0000ff', bold = true })
+  vim.fn.matchadd('UserLabelHighlight', '^User: ')
+
+  vim.api.nvim_set_hl(0, 'AIMessageHighlight', { fg = '#ff0000' })
+  vim.fn.matchadd('AIMessageHighlight', '\\(^AI: \\)\\@<=\\_.\\{\\-\\}\\(\\(' .. message_separator .. '\\)\\|\\%$\\)\\@=')
+  vim.api.nvim_set_hl(0, 'AILabelHighlight', { fg = '#ff0000', bold = true })
+  vim.fn.matchadd('AILabelHighlight', '^AI: ')
+
   vim.api.nvim_buf_set_lines(split.buf, 0, 0, false, { "User: " })
+
 
   vim.keymap.set('n', '<leader><enter>', function()
     -- this function should send current chat context to AI and
@@ -82,7 +98,7 @@ Ensure that your code is clean and exhaustively solves the user's problem.
       }
     }, function(responseText)
       -- append the output to chat directly for now - maybe i'll parse it at one point idk
-      local text = "\nAI: " .. responseText .. "\nUser: "
+      local text = message_separator .. "\nAI: " .. responseText .. "\n" .. message_separator .. "\nUser: "
       local text_lines = vim.split(text, '\n')
       vim.api.nvim_buf_set_lines(split.buf, -1, -1, false, text_lines)
     end)

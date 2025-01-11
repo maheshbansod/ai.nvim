@@ -25,6 +25,12 @@
     - without context - search in the file where to put the code first.
     - with context it can directly select what parts of the context to replace.
 
+#### Quick suggestion
+
+- [ ] Better support for adding to the current line
+    - more context like language / framework / locals / etc
+- [ ] Highlight generated text for maybe 1 second.
+- [ ] Show loader while generation is in progress
 
 #### Completion and AI refactoring
 
