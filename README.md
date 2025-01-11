@@ -34,11 +34,21 @@ return {
 
 ### Usage
 
+#### Quick change
+
 `:AiSuggestion` in normal mode or visual mode.
 
 -> opens a floating window where one can write a prompt  
 -> press `<enter>`  
 -> AI content will replace the selected text  
+
+#### Chat
+
+`:AiChat` in normal mode
+
+-> opens a split window  
+-> Add your message on a line starting with `User: `  
+-> Messages go the LLM and a response is appended to the buffer.  
 
 ### Future
 
@@ -46,3 +56,5 @@ return {
     - Can be file level, selection level, or codebase level.
 - Approval system - not really sure rn how 
     - maybe should also show the diff
+
+See [TODO.md](./TODO.md)
