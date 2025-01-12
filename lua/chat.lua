@@ -50,6 +50,10 @@ M.start_chat = function()
   -- initialises with some settings probably
 
   local parent_buf = vim.api.nvim_get_current_buf()
+  local extra_information = {
+    filetype = vim.bo.filetype,
+    filename = vim.api.nvim_buf_get_name(parent_buf)
+  }
   local split = wu.create_chat_window()
 
   vim.api.nvim_create_autocmd('QuitPre', {
@@ -69,6 +73,8 @@ M.start_chat = function()
     message_separator .. '\\)\\|\\%$\\)\\@=')
   vim.api.nvim_set_hl(0, 'UserLabelHighlight', { fg = '#0000ff', bold = true })
   vim.fn.matchadd('UserLabelHighlight', '^User: ')
+  vim.bo.filetype = 'markdown'
+
 
   -- vim.api.nvim_set_hl(0, 'AIMessageHighlight', { fg = '#ff0000' })
   -- vim.fn.matchadd('AIMessageHighlight', '\\(^AI: \\)\\@<=\\_.\\{\\-\\}\\(\\(' .. message_separator .. '\\)\\|\\%$\\)\\@=')
@@ -97,7 +103,9 @@ You are an expert senior software engineer and produce high quality code.
 The user is the developer.
 You are having a conversation with the user and your task is to provide code snippets to the developer.
 Ensure that your code is clean and exhaustively solves the user's problem.
-]]
+
+]] .. "The user is currently looking at the file '" .. extra_information.filename .. "'\n"
+                .. "It's file type is " .. extra_information.filetype
           }
         }
       },
@@ -110,7 +118,7 @@ Ensure that your code is clean and exhaustively solves the user's problem.
       }
     }, function(responseText)
       -- append the output to chat directly for now - maybe i'll parse it at one point idk
-      local text = message_separator .. "\nAI: " .. responseText .. "\n" .. message_separator .. "\nUser: "
+      local text = "\n" .. message_separator .. "\nAI: " .. responseText .. "\n" .. message_separator .. "\nUser: "
       local text_lines = vim.split(text, '\n')
       vim.api.nvim_buf_set_lines(split.buf, -1, -1, false, text_lines)
     end)
