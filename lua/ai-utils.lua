@@ -42,6 +42,35 @@ M.llm_run = function(post_data, on_exit)
   })
 end
 
+M.llm_run_streamed = function(post_data, on_next_line, on_end)
+  local API_KEY = get_api_key()
+
+  local curl = require('plenary.curl')
+  local url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:streamGenerateContent?key=" ..
+      API_KEY
+
+  local partial_chunk = ""
+
+  curl.post(url, {
+    body = vim.fn.json_encode(post_data),
+    headers = {
+      content_type = "application/json",
+    },
+    stream = function(_, chunk)
+      partial_chunk = partial_chunk .. chunk
+      pcall(function()
+        local data = vim.json.decode(partial_chunk .. "]")
+        vim.defer_fn(function()
+          on_next_line(data[#data].candidates[1].content.parts[1].text)
+        end, 0)
+      end)
+    end,
+    callback = function()
+      vim.defer_fn(on_end, 0)
+    end
+  })
+end
+
 ---TODO: think about this later
 local a = require('plenary.async')
 M.llm_run_async = a.wrap(M.llm_run, 2)

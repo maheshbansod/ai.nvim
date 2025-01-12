@@ -92,7 +92,10 @@ M.start_chat = function()
     local chat_lines = vim.api.nvim_buf_get_lines(split.buf, 0, -1, false)
     local conversation = chat_to_conversation(chat_lines)
     local llm_contents = conversation_to_llm_contents(conversation)
-    au.llm_run({
+    local loading_message = "thinking..."
+    vim.api.nvim_buf_set_lines(split.buf, -1, -1, false, { "", message_separator, "AI: " .. loading_message })
+    local loading_message_removed = false;
+    au.llm_run_streamed({
       contents = llm_contents,
       systemInstruction = {
         role = "user",
@@ -118,9 +121,17 @@ Ensure that your code is clean and exhaustively solves the user's problem.
       }
     }, function(responseText)
       -- append the output to chat directly for now - maybe i'll parse it at one point idk
-      local text = "\n" .. message_separator .. "\nAI: " .. responseText .. "\n" .. message_separator .. "\nUser: "
+      local text = responseText
       local text_lines = vim.split(text, '\n')
-      vim.api.nvim_buf_set_lines(split.buf, -1, -1, false, text_lines)
+      local start_col = -1
+      if not loading_message_removed then
+        start_col = - #loading_message - 1
+        loading_message_removed = true
+      end
+      vim.api.nvim_buf_set_text(split.buf, -1, start_col, -1, -1, text_lines)
+      -- vim.api.nvim_buf_set_lines(split.buf, -2, -1, false, text_lines)
+    end, function()
+      vim.api.nvim_buf_set_lines(split.buf, -1, -1, false, { "", message_separator, "User: " })
     end)
   end)
 
