@@ -14,10 +14,10 @@ local chat_to_conversation = function(lines)
   local messages = {}
   for _, line in ipairs(lines) do
     if line:match('^AI: ') then
-      local text = line:sub(3)
+      local text = line:sub(4)
       table.insert(messages, { text = text, role = "ai" })
     elseif line:match('^User: ') then
-      local text = line:sub(3)
+      local text = line:sub(7)
       table.insert(messages, { text = text, role = "user" })
     elseif line:match('^' .. message_separator .. '$') then
       -- ignore the line
@@ -68,10 +68,12 @@ M.start_chat = function()
     end
   })
 
-  vim.api.nvim_set_hl(0, 'UserMessageHighlight', { fg = '#0000ff' })
+
+  local user_message_color = "#00FF00"
+  vim.api.nvim_set_hl(0, 'UserMessageHighlight', { fg = user_message_color })
   vim.fn.matchadd('UserMessageHighlight', '\\(^User: \\)\\@<=\\_.\\{\\-\\}\\(\\(' ..
     message_separator .. '\\)\\|\\%$\\)\\@=')
-  vim.api.nvim_set_hl(0, 'UserLabelHighlight', { fg = '#0000ff', bold = true })
+  vim.api.nvim_set_hl(0, 'UserLabelHighlight', { fg = user_message_color, bold = true })
   vim.fn.matchadd('UserLabelHighlight', '^User: ')
   vim.bo.filetype = 'markdown'
 
