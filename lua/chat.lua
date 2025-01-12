@@ -101,7 +101,7 @@ M.start_chat = function()
             text = [[
 You are an expert senior software engineer and produce high quality code.
 The user is the developer.
-You are having a conversation with the user and your task is to provide code snippets to the developer.
+You are having a conversation with the user and your task is to provide code snippets to the developer or help the developer in any way you can.
 Ensure that your code is clean and exhaustively solves the user's problem.
 
 ]] .. "The user is currently looking at the file '" .. extra_information.filename .. "'\n"
