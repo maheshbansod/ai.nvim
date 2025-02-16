@@ -46,7 +46,7 @@ M.llm_run_streamed = function(post_data, on_next_line, on_end)
   local API_KEY = get_api_key()
 
   local curl = require('plenary.curl')
-  local url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:streamGenerateContent?key=" ..
+  local url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=" ..
       API_KEY
 
   local partial_chunk = ""
