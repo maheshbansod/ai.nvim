@@ -11,6 +11,8 @@
     - [ ] On completion of one prompt, it should give space for the next while still showing the old one
 - [ ] Spinner or something to show loading while API response is comin
 
+- [ ] What if I can have personalities or the user can have a system context that can be used to set the personality of their chat?
+
 #### Chat stuff
 
 - [x] Chat window for continous chats
