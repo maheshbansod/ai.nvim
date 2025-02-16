@@ -37,7 +37,11 @@ local chat_to_conversation = function(lines)
       -- ignore the line
     else
       local last_message = messages[#messages]
-      last_message.text = last_message.text .. '\n' .. line
+      if last_message.text:match("^%s*$") then
+        last_message.text = line
+      else
+        last_message.text = last_message.text .. '\n' .. line
+      end
     end
     local file_paths = extract_filepaths(line)
     for _, file_path in ipairs(file_paths) do
@@ -191,6 +195,7 @@ Your purpose is for the user to quickly finish their tasks so you can return to 
       if not loading_message_removed then
         start_col = - #loading_message - 1
         loading_message_removed = true
+        table.insert(text_lines, 1, "")
       end
       vim.api.nvim_buf_set_text(split.buf, -1, start_col, -1, -1, text_lines)
       -- vim.api.nvim_buf_set_lines(split.buf, -2, -1, false, text_lines)
