@@ -4,14 +4,28 @@ local wu = require 'window-utils'
 local au = require 'ai-utils'
 local message_separator = "----------"
 
+---@alias ContextFile {name: string, content: string}
+---@alias ConversationContext {files: ContextFile[]}
 ---@alias Message {role: "user"|"ai", text: string}
----@alias Conversation {messages: Message[]}
+---@alias Conversation {messages: Message[], conversation_context: ConversationContext}
+
+---@param input_string string
+local function extract_filepaths(input_string)
+  local pattern = "@file:([^%s]+)"
+  ---@type string[]
+  local filepaths = {}
+  for filepath in string.gmatch(input_string, pattern) do
+    table.insert(filepaths, filepath)
+  end
+  return filepaths
+end
 
 ---Convert lines to a conversation
 ---@param lines string[]
 local chat_to_conversation = function(lines)
   ---@type (Message)[]
   local messages = {}
+  local context_files_map = {}
   for _, line in ipairs(lines) do
     if line:match('^AI: ') then
       local text = line:sub(4)
@@ -25,8 +39,32 @@ local chat_to_conversation = function(lines)
       local last_message = messages[#messages]
       last_message.text = last_message.text .. '\n' .. line
     end
+    local file_paths = extract_filepaths(line)
+    for _, file_path in ipairs(file_paths) do
+      if context_files_map[file_path] == nil then
+        local file, err = io.open(file_path, "r")
+        if not file then
+          print(err)
+          goto continue
+        end
+        local content = file:read("*a")
+        context_files_map[file_path] = content
+        file:close()
+      end
+      ::continue::
+    end
   end
-  return { messages = messages }
+  ---@type ContextFile[]
+  local context_files = {}
+  for name, content in pairs(context_files_map) do
+    table.insert(context_files, { name = name, content = content })
+  end
+  ---@type Conversation
+  local conversation = {
+    messages = messages,
+    conversation_context = { files = context_files }
+  }
+  return conversation
 end
 
 ---Convert conversations to LLM contents that can be directly sent
@@ -43,6 +81,26 @@ local conversation_to_llm_contents = function(conversation)
     })
   end
   return contents
+end
+
+---@param conversation Conversation
+local function conversation_context_message(conversation)
+  if next(conversation.conversation_context) == nil then
+    return ""
+  end
+  if next(conversation.conversation_context.files) == nil then
+    return ""
+  end
+  ---@type string
+  local message = "\nThese are some of the files that are referenced in the conversation:\n"
+  for _, file_data in ipairs(conversation.conversation_context.files) do
+    local name = file_data.name
+    local content = file_data.content
+    message = message .. "==== Start of file `" .. name .. "`\n"
+        .. content
+        .. "\n==== End of file `" .. name .. "`\n"
+  end
+  return message
 end
 
 M.start_chat = function()
@@ -94,6 +152,7 @@ M.start_chat = function()
     local chat_lines = vim.api.nvim_buf_get_lines(split.buf, 0, -1, false)
     local conversation = chat_to_conversation(chat_lines)
     local llm_contents = conversation_to_llm_contents(conversation)
+    local llm_context_message = conversation_context_message(conversation)
     local loading_message = "thinking..."
     vim.api.nvim_buf_set_lines(split.buf, -1, -1, false, { "", message_separator, "AI: " .. loading_message })
     local loading_message_removed = false;
@@ -111,6 +170,7 @@ Ensure that your code is clean and exhaustively solves the user's problem.
 
 ]] .. "The user is currently looking at the file '" .. extra_information.filename .. "'\n"
                 .. "It's file type is " .. extra_information.filetype
+                .. llm_context_message
           }
         }
       },
