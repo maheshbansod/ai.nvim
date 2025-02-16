@@ -50,6 +50,9 @@ return {
 -> Add your message on a line starting with `User: `  
 -> Messages go to the LLM and a response is appended to the buffer.  
 
+You can refer to a specific file in the chat as `@file:<file path>` . Here, the file path is 
+relative to the root of the project. The files you include are included as part of the system prompt.
+
 ### Future
 
 - Chat
