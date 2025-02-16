@@ -15,7 +15,13 @@ local function extract_filepaths(input_string)
   ---@type string[]
   local filepaths = {}
   for filepath in string.gmatch(input_string, pattern) do
-    table.insert(filepaths, filepath)
+    if filepath:match("^\"") then
+      for filepath_w_quotes in string.gmatch(input_string, "@file:\"([^\"]*)\"") do
+        table.insert(filepaths, filepath_w_quotes)
+      end
+    else
+      table.insert(filepaths, filepath)
+    end
   end
   return filepaths
 end
