@@ -28,7 +28,8 @@ end
 
 ---Convert lines to a conversation
 ---@param lines string[]
-local chat_to_conversation = function(lines)
+---@param extra_info {parent_buf: number}
+local chat_to_conversation = function(lines, extra_info)
   ---@type (Message)[]
   local messages = {}
   local context_files_map = {}
@@ -52,14 +53,20 @@ local chat_to_conversation = function(lines)
     local file_paths = extract_filepaths(line)
     for _, file_path in ipairs(file_paths) do
       if context_files_map[file_path] == nil then
-        local file, err = io.open(file_path, "r")
-        if not file then
-          print(err)
-          goto continue
+        if file_path == "current" then
+          -- get current buffer
+          local content = vim.api.nvim_buf_get_lines(extra_info.parent_buf, 0, -1, false)
+          context_files_map[file_path] = table.concat(content, '\n')
+        else
+          local file, err = io.open(file_path, "r")
+          if not file then
+            print(err)
+            goto continue
+          end
+          local content = file:read("*a")
+          context_files_map[file_path] = content
+          file:close()
         end
-        local content = file:read("*a")
-        context_files_map[file_path] = content
-        file:close()
       end
       ::continue::
     end
@@ -160,7 +167,7 @@ M.start_chat = function()
     -- then an option to apply it to somewhere maybe.
 
     local chat_lines = vim.api.nvim_buf_get_lines(split.buf, 0, -1, false)
-    local conversation = chat_to_conversation(chat_lines)
+    local conversation = chat_to_conversation(chat_lines, { parent_buf = parent_buf })
     local llm_contents = conversation_to_llm_contents(conversation)
     local llm_context_message = conversation_context_message(conversation)
     local loading_message = "thinking..."
